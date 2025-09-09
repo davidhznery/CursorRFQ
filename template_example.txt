@@ -1,0 +1,86 @@
+# RFQ Template Example
+
+This file shows how to create custom templates for the RFQ Converter.
+
+## Available Placeholders
+
+### Basic Information
+- {RFQ_NUMBER} - RFQ number (e.g., SOS-RFQ-2025-0001)
+- {CREATION_DATE} - Creation date (current date)
+- {DUE_DATE} - Due date (current date + 10 days)
+- {COMPANY} - Company name (DLE or SOS)
+
+### Content Placeholders
+- {EXTRACTED_TEXT} - Full text extracted from PDF
+- {PRODUCT} - Product/service extracted
+- {QUANTITY} - Quantity extracted
+- {SPECIFICATIONS} - Specifications extracted
+- {BUDGET} - Budget range extracted
+
+### Table Placeholder
+- {TABLE_DATA} - Complete HTML table with products
+  - ID, Description, U.M, Qty, Note columns
+  - Automatically generated from PDF content
+
+## Example Template Structure
+
+```
+=== RFQ {COMPANY} - REQUEST FOR QUOTATION ===
+RFQ Number: {RFQ_NUMBER}
+Creation Date: {CREATION_DATE}
+Due Date: {DUE_DATE}
+===============================================
+
+GENERAL INFORMATION:
+Company: {COMPANY}
+RFQ Number: {RFQ_NUMBER}
+Creation Date: {CREATION_DATE}
+Due Date: {DUE_DATE}
+Status: PENDING
+
+1. Scope of Supply:
+
+{TABLE_DATA}
+
+REQUEST DETAILS:
+Product/Service: {PRODUCT}
+Quantity: {QUANTITY}
+Specifications: {SPECIFICATIONS}
+Budget Range: {BUDGET}
+Delivery Date: {DUE_DATE}
+
+PROCESSED ORIGINAL TEXT:
+{EXTRACTED_TEXT}
+
+===============================================
+Auto-generated document - {COMPANY}
+Company standard format
+===============================================
+```
+
+## Built-in Templates
+
+### SOS Template (Recommended)
+- Professional HTML template with logo and signature
+- Company branding: Superb Oil Stream and Services Ltd.
+- Includes QR code and Malta address
+- Generates high-quality PDFs
+
+### DLE Template
+- Standard text-based format
+- Word document compatibility
+- HTML backup available
+
+## Usage Instructions
+
+1. **Use Built-in Templates**: SOS and DLE templates are integrated
+2. **Custom Templates**: Paste your template in the "Custom Template Input" section
+3. **Placeholders**: Use the placeholders above in your template
+4. **Priority**: Custom templates override built-in templates
+
+## Best Practices
+
+- Use SOS template for best results
+- Include {TABLE_DATA} for automatic product tables
+- Keep placeholders simple and clear
+- Test with sample PDFs first

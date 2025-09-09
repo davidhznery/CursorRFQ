@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Request for Quotation – Dynamic Template</title>
+  <style>
+    :root {
+      --accent: #0f172a;
+      --muted: #64748b;
+      --border: #e2e8f0;
+      --bg: #ffffff;
+      --brand: #1f2937;
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      color: #0b1020;
+      background: var(--bg);
+      line-height: 1.4;
+    }
+    .sheet { width: 210mm; min-height: 297mm; margin: 0 auto; padding: 18mm; background: white; border: 1px solid var(--border); position: relative; }
+    header.brand { display: grid; grid-template-columns: 96px 1fr; gap: 16px; align-items: center; border-bottom: 2px solid var(--border); padding-bottom: 12px; margin-bottom: 16px; }
+    header .logo { width: 96px; height: 96px; object-fit: contain; border-radius: 8px; border: 1px solid var(--border); background:#fff; }
+    .brand-block h1 { margin: 0; font-size: 20px; letter-spacing: .2px; color: var(--brand); }
+    .brand-block .meta { color: var(--muted); font-size: 12px; margin-top: 2px; }
+    .actions { text-align: right; margin-bottom: 8px; }
+    .btn { display: inline-block; border: 1px solid var(--border); padding: 6px 10px; border-radius: 8px; background:#f8fafc; cursor: pointer; font-size: 12px; }
+    .rfq-title { text-align: center; margin: 12px 0 6px; }
+    .rfq-title h2 { margin: 0; font-size: 22px; letter-spacing: .3px; }
+    .subnote { text-align: center; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+    .due { text-align: right; font-size: 12px; margin: 6px 0 10px; }
+    .section-title { margin: 16px 0 8px; font-size: 16px; border-bottom: 2px solid var(--border); padding-bottom: 4px; }
+    .items th, .items td { border: 1px solid var(--border); padding: 6px 8px; }
+    .items thead th { background: #f8fafc; }
+    .signoff { margin-top: 24px; }
+    .signoff .company { font-weight: 700; }
+    .signature-img { width: 85mm; height: auto; object-fit: contain; display:block; margin: 6mm 0 2mm; }
+
+footer { border-top: 2px solid var(--border); margin-top: 20px; padding-top: 8px; font-size: 11px; color: var(--muted); display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 8px; }
+.footer-qr { width: 20mm; height: auto; object-fit: contain; justify-self: end; }
+    @media print { body { background: white; } .sheet { border: none; box-shadow: none; } .actions { display: none !important; } @page { size: A4; margin: 14mm; }  } .sheet { border: none; box-shadow: none; } .actions { display: none !important; } @page { size: A4; margin: 14mm; } }
+  </style>
+</head>
+<body>
+  <div class="actions">
+    <button class="btn" onclick="window.print()">Download as PDF</button>
+  </div>
+
+  <article class="sheet" id="document">
+    <header class="brand">
+      <img id="logo" class="logo" alt="Company Logo" src="https://drive.google.com/thumbnail?id=1cirv2ggrxg98gbkIn2XFPRZhfvMk3u4w&sz=w2000" />
+      <div class="brand-block">
+        <h1 data-field="company_name">Superb Oil Stream and Services Ltd. (SOS)</h1>
+        <div class="meta">
+          <span data-field="company_address">Ferris Building No.1 Floor 1 Triq San Luqa, G’Mangia Pieta. PTA 1020 – Malta</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="rfq-title">
+      <h2>REQUEST FOR QUOTATION No. <span data-field="rfq_number">{RFQ_NUMBER}</span></h2>
+    </div>
+    <div class="subnote">(This is not a purchase order)</div>
+    <div class="due">Due Date: <strong><span data-field="due_date">{DUE_DATE}</span></strong></div>
+
+    <h3 class="section-title">Scope of Supply</h3>
+    <table class="items">
+      <thead>
+        <tr><th>ID</th><th>Description</th><th>U.M</th><th>Qty</th><th>Note</th></tr>
+      </thead>
+      <tbody id="items-body">{TABLE_DATA}</tbody>
+    </table>
+
+    <div class="signoff">
+      <p>Yours sincerely,</p>
+      <p class="company">Superb Oil and Stream Service LTD</p>
+      <!-- Signature above the title -->
+      <img id="signature_img" class="signature-img" src="https://drive.google.com/thumbnail?id=1oOhJeetOxrDtsZBLCfe6NzDaNrh_7LNF&sz=w2000" alt="Signature Sabri" />
+      <p><span data-field="signatory_title">Managing Director</span></p>
+      <p><span data-field="signatory_name">Sabri Rezk</span></p>
+    </div>
+    <!-- Seal fixed at bottom-right -->
+    
+
+    <footer>
+      <div>
+        <strong>Superb Oil Stream and Services Ltd. (SOS)</strong><br/>
+        <span>Ferris Building No.1 Floor 1 Triq San Luqa, G’Mangia Pieta. PTA 1020 – Malta</span>
+      </div>
+      <!-- QR placed in footer (right side) -->
+      <img id="qr_img" class="footer-qr" src="https://drive.google.com/thumbnail?id=1lHXE3ni-JXLEmQXk02oT3ZR6lXbn3-0Z&sz=w1000" alt="QR Code" />
+    </footer>
+  </article>
+
+  <script>
+    function setImageWithFallback(imgEl, url){
+      if(!imgEl || !url) return;
+      var m = url.match(/\/d\/([\w-]+)/) || url.match(/[?&]id=([\w-]+)/);
+      var id = m ? m[1] : null;
+      var candidates = id ? [
+        'https://drive.google.com/uc?export=view&id=' + id,
+        'https://drive.google.com/thumbnail?id=' + id + '&sz=w2000',
+        'https://drive.google.com/uc?export=download&id=' + id
+      ] : [url];
+      var i = 0;
+      function next(){ if(i >= candidates.length) return; imgEl.onerror = function(){ i++; next(); }; imgEl.src = candidates[i]; }
+      next();
+    }
+
+    (function(){
+      var DEFAULT_ASSETS = {
+        logo_url: 'https://drive.google.com/file/d/1cirv2ggrxg98gbkIn2XFPRZhfvMk3u4w/view?usp=sharing',
+        signature_url: 'https://drive.google.com/file/d/1oOhJeetOxrDtsZBLCfe6NzDaNrh_7LNF/view?usp=sharing',
+        seal_url: 'https://drive.google.com/file/d/1VjTDdhUVZ5LUqViRJ0rvAPrRdk03AMpa/view?usp=sharing',
+        qr_url: 'https://drive.google.com/file/d/1lHXE3ni-JXLEmQXk02oT3ZR6lXbn3-0Z/view?usp=sharing'
+      };
+      window.RFQ_DATA = Object.assign({}, DEFAULT_ASSETS, window.RFQ_DATA || {});
+
+      setImageWithFallback(document.getElementById('logo'), window.RFQ_DATA.logo_url);
+      setImageWithFallback(document.getElementById('signature_img'), window.RFQ_DATA.signature_url);
+      setImageWithFallback(document.getElementById('seal_img'), window.RFQ_DATA.seal_url);
+      setImageWithFallback(document.getElementById('qr_img'), window.RFQ_DATA.qr_url);
+    })();
+  </script>
+</body>
+</html>
