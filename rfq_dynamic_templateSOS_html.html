@@ -41,7 +41,12 @@
 
 footer { border-top: 2px solid var(--border); margin-top: 20px; padding-top: 8px; font-size: 11px; color: var(--muted); display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 8px; }
 .footer-qr { width: 20mm; height: auto; object-fit: contain; justify-self: end; }
-    @media print { body { background: white; } .sheet { border: none; box-shadow: none; } .actions { display: none !important; } @page { size: A4; margin: 14mm; }  } .sheet { border: none; box-shadow: none; } .actions { display: none !important; } @page { size: A4; margin: 14mm; } }
+    @media print {
+      body { background: white; }
+      .sheet { border: none; box-shadow: none; }
+      .actions { display: none !important; }
+      @page { size: A4; margin: 14mm; }
+    }
   </style>
 </head>
 <body>
@@ -51,7 +56,7 @@ footer { border-top: 2px solid var(--border); margin-top: 20px; padding-top: 8px
 
   <article class="sheet" id="document">
     <header class="brand">
-      <img id="logo" class="logo" alt="Company Logo" src="https://drive.google.com/thumbnail?id=1cirv2ggrxg98gbkIn2XFPRZhfvMk3u4w&sz=w2000" />
+      <img id="logo" class="logo" alt="Company Logo" src="https://lh3.googleusercontent.com/d/1cirv2ggrxg98gbkIn2XFPRZhfvMk3u4w?t=123456789" />
       <div class="brand-block">
         <h1 data-field="company_name">Superb Oil Stream and Services Ltd. (SOS)</h1>
         <div class="meta">
@@ -78,7 +83,7 @@ footer { border-top: 2px solid var(--border); margin-top: 20px; padding-top: 8px
       <p>Yours sincerely,</p>
       <p class="company">Superb Oil and Stream Service LTD</p>
       <!-- Signature above the title -->
-      <img id="signature_img" class="signature-img" src="https://drive.google.com/thumbnail?id=1oOhJeetOxrDtsZBLCfe6NzDaNrh_7LNF&sz=w2000" alt="Signature Sabri" />
+      <img id="signature_img" class="signature-img" src="https://drive.google.com/thumbnail?id=12KeRfpOvajA6uZ5KmAC7vcVuBzcF3iLl&t=123456789" alt="Signature Sabri" />
       <p><span data-field="signatory_title">Managing Director</span></p>
       <p><span data-field="signatory_name">Sabri Rezk</span></p>
     </div>
@@ -91,39 +96,13 @@ footer { border-top: 2px solid var(--border); margin-top: 20px; padding-top: 8px
         <span>Ferris Building No.1 Floor 1 Triq San Luqa, G’Mangia Pieta. PTA 1020 – Malta</span>
       </div>
       <!-- QR placed in footer (right side) -->
-      <img id="qr_img" class="footer-qr" src="https://drive.google.com/thumbnail?id=1lHXE3ni-JXLEmQXk02oT3ZR6lXbn3-0Z&sz=w1000" alt="QR Code" />
+      <img id="qr_img" class="footer-qr" src="https://lh3.googleusercontent.com/d/1lHXE3ni-JXLEmQXk02oT3ZR6lXbn3-0Z?t=123456789" alt="QR Code" />
     </footer>
   </article>
 
   <script>
-    function setImageWithFallback(imgEl, url){
-      if(!imgEl || !url) return;
-      var m = url.match(/\/d\/([\w-]+)/) || url.match(/[?&]id=([\w-]+)/);
-      var id = m ? m[1] : null;
-      var candidates = id ? [
-        'https://drive.google.com/uc?export=view&id=' + id,
-        'https://drive.google.com/thumbnail?id=' + id + '&sz=w2000',
-        'https://drive.google.com/uc?export=download&id=' + id
-      ] : [url];
-      var i = 0;
-      function next(){ if(i >= candidates.length) return; imgEl.onerror = function(){ i++; next(); }; imgEl.src = candidates[i]; }
-      next();
-    }
-
-    (function(){
-      var DEFAULT_ASSETS = {
-        logo_url: 'https://drive.google.com/file/d/1cirv2ggrxg98gbkIn2XFPRZhfvMk3u4w/view?usp=sharing',
-        signature_url: 'https://drive.google.com/file/d/1oOhJeetOxrDtsZBLCfe6NzDaNrh_7LNF/view?usp=sharing',
-        seal_url: 'https://drive.google.com/file/d/1VjTDdhUVZ5LUqViRJ0rvAPrRdk03AMpa/view?usp=sharing',
-        qr_url: 'https://drive.google.com/file/d/1lHXE3ni-JXLEmQXk02oT3ZR6lXbn3-0Z/view?usp=sharing'
-      };
-      window.RFQ_DATA = Object.assign({}, DEFAULT_ASSETS, window.RFQ_DATA || {});
-
-      setImageWithFallback(document.getElementById('logo'), window.RFQ_DATA.logo_url);
-      setImageWithFallback(document.getElementById('signature_img'), window.RFQ_DATA.signature_url);
-      setImageWithFallback(document.getElementById('seal_img'), window.RFQ_DATA.seal_url);
-      setImageWithFallback(document.getElementById('qr_img'), window.RFQ_DATA.qr_url);
-    })();
+    // Images are now loaded from Google Drive - no fallback needed
+    console.log('SOS Template loaded with Google Drive images');
   </script>
 </body>
 </html>

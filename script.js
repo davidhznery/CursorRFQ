@@ -3,10 +3,9 @@ class PDFConverter {
         this.initializeElements();
         this.setupEventListeners();
         this.worker = null;
-        // Load optional OpenAI API key from localStorage (no hardcoded key)
+        // Load OpenAI API key from localStorage
         this.openaiApiKey = localStorage.getItem('openaiApiKey') || '';
         // Load branding configuration
-        this.branding = this.getSavedBranding();
         this.rfqCounter = this.getRfqCounter();
     }
 
@@ -23,35 +22,17 @@ class PDFConverter {
         this.newFileBtn = document.getElementById('newFileBtn');
         this.retryBtn = document.getElementById('retryBtn');
         this.errorMessage = document.getElementById('errorMessage');
-        this.companyRadios = document.querySelectorAll('input[name="company"]');
-        
-        // Branding inputs
-        this.logoFileInput = document.getElementById('logoFileInput');
-        this.logoPreview = document.getElementById('logoPreview');
-        this.headerTextInput = document.getElementById('headerTextInput');
-        this.footerTextInput = document.getElementById('footerTextInput');
-        this.saveBrandingBtn = document.getElementById('saveBrandingBtn');
-        this.clearBrandingBtn = document.getElementById('clearBrandingBtn');
-        
-        // API key inputs
-        this.openaiApiKeyInput = document.getElementById('openaiApiKeyInput');
-        this.saveApiKeyBtn = document.getElementById('saveApiKeyBtn');
-        this.clearApiKeyBtn = document.getElementById('clearApiKeyBtn');
+        this.templateRadios = document.querySelectorAll('input[name="template"]');
         
         // RFQ number input
         this.rfqNumberInput = document.getElementById('rfqNumberInput');
         this.setRfqNumberBtn = document.getElementById('setRfqNumberBtn');
         
-        // Custom template input
-        this.customTemplateInput = document.getElementById('customTemplateInput');
-        this.setCustomTemplateBtn = document.getElementById('setCustomTemplateBtn');
-        
         
         // Store templates
         this.dleTemplate = this.getBuiltInDLETemplate();
-        this.sosTemplate = this.getBuiltInSOSTemplate();
+        this.sosTemplate = null; // Will be loaded dynamically when needed
         this.customRfqNumber = null;
-        this.customTemplate = null;
         this.htmlTemplate = null;
     }
 
@@ -86,70 +67,9 @@ class PDFConverter {
         
         // RFQ number setting
         this.setRfqNumberBtn.addEventListener('click', () => this.setCustomRfqNumber());
-        
-        // Custom template setting
-        this.setCustomTemplateBtn.addEventListener('click', () => this.setCustomTemplate());
-        
-
-        // Branding listeners
-        if (this.logoFileInput) {
-            this.logoFileInput.addEventListener('change', (e) => {
-                const file = e.target.files && e.target.files[0];
-                if (!file) return;
-                const reader = new FileReader();
-                reader.onload = () => {
-                    this.branding = this.branding || {};
-                    this.branding.logoDataUrl = reader.result;
-                    this.saveBrandingToStorage();
-                    this.refreshBrandingPreview();
-                };
-                reader.readAsDataURL(file);
-            });
-        }
-        if (this.saveBrandingBtn) {
-            this.saveBrandingBtn.addEventListener('click', () => {
-                this.branding = this.branding || {};
-                this.branding.headerText = (this.headerTextInput?.value || '').trim();
-                this.branding.footerText = (this.footerTextInput?.value || '').trim();
-                this.saveBrandingToStorage();
-                alert('Branding saved');
-            });
-        }
-        if (this.clearBrandingBtn) {
-            this.clearBrandingBtn.addEventListener('click', () => {
-                this.branding = { logoDataUrl: '', headerText: '', footerText: '' };
-                this.saveBrandingToStorage();
-                if (this.headerTextInput) this.headerTextInput.value = '';
-                if (this.footerTextInput) this.footerTextInput.value = '';
-                if (this.logoFileInput) this.logoFileInput.value = '';
-                this.refreshBrandingPreview();
-                alert('Branding cleared');
-            });
-        }
-
-        // API Key listeners
-        if (this.saveApiKeyBtn) {
-            this.saveApiKeyBtn.addEventListener('click', () => {
-                const key = this.openaiApiKeyInput?.value?.trim() || '';
-                this.openaiApiKey = key;
-                if (key) {
-                    localStorage.setItem('openaiApiKey', key);
-                    alert('API key saved locally');
-                }
-            });
-        }
-        if (this.clearApiKeyBtn) {
-            this.clearApiKeyBtn.addEventListener('click', () => {
-                this.openaiApiKey = '';
-                localStorage.removeItem('openaiApiKey');
-                if (this.openaiApiKeyInput) this.openaiApiKeyInput.value = '';
-                alert('API key cleared');
-            });
-        }
 
         // Load saved settings
         this.loadSavedSettings();
-        this.refreshBrandingPreview();
     }
 
     loadSavedSettings() {
@@ -159,57 +79,8 @@ class PDFConverter {
             this.customRfqNumber = savedRfqNumber;
             this.rfqNumberInput.value = savedRfqNumber;
         }
-        
-        // Load custom template
-        const savedCustomTemplate = localStorage.getItem('customTemplate');
-        if (savedCustomTemplate) {
-            this.customTemplate = savedCustomTemplate;
-            this.customTemplateInput.value = savedCustomTemplate;
-        }
-        
-        
-        // Branding
-        const branding = this.getSavedBranding();
-        this.branding = branding;
-        if (this.headerTextInput) this.headerTextInput.value = branding.headerText || '';
-        if (this.footerTextInput) this.footerTextInput.value = branding.footerText || '';
-        if (branding.logoDataUrl && this.logoPreview) {
-            this.logoPreview.src = branding.logoDataUrl;
-            this.logoPreview.style.display = 'inline-block';
-        }
-
-        // API key
-        if (this.openaiApiKeyInput) {
-            this.openaiApiKeyInput.value = this.openaiApiKey || '';
-        }
     }
 
-    getSavedBranding() {
-        try {
-            const raw = localStorage.getItem('branding');
-            return raw ? JSON.parse(raw) : { logoDataUrl: '', headerText: '', footerText: '' };
-        } catch (e) {
-            return { logoDataUrl: '', headerText: '', footerText: '' };
-        }
-    }
-
-    saveBrandingToStorage() {
-        try {
-            localStorage.setItem('branding', JSON.stringify(this.branding || { logoDataUrl: '', headerText: '', footerText: '' }));
-        } catch {}
-    }
-
-    refreshBrandingPreview() {
-        if (this.logoPreview) {
-            if (this.branding && this.branding.logoDataUrl) {
-                this.logoPreview.src = this.branding.logoDataUrl;
-                this.logoPreview.style.display = 'inline-block';
-            } else {
-                this.logoPreview.removeAttribute('src');
-                this.logoPreview.style.display = 'none';
-            }
-        }
-    }
 
     getRfqCounter() {
         const counter = localStorage.getItem('rfqCounter');
@@ -222,9 +93,11 @@ class PDFConverter {
         return this.rfqCounter;
     }
 
-    getSelectedCompany() {
-        const selected = document.querySelector('input[name="company"]:checked');
-        return selected ? selected.value : 'DLE';
+    getSelectedTemplate() {
+        const selected = document.querySelector('input[name="template"]:checked');
+        const template = selected ? selected.value : 'DLE';
+        console.log('Selected template:', template);
+        return template;
     }
 
     generateRfqNumber(company) {
@@ -280,7 +153,30 @@ Company standard format
 ===============================================`;
     }
 
-    getBuiltInSOSTemplate() {
+    async getBuiltInSOSTemplate() {
+        try {
+            console.log('Loading SOS template from reference file...');
+
+            // Try to load the reference template file
+            const response = await fetch('./rfq_dynamic_templateSOS_html.html');
+            if (response.ok) {
+                const templateContent = await response.text();
+                console.log('Successfully loaded SOS reference template');
+                console.log('Template length:', templateContent.length, 'characters');
+                return templateContent;
+            } else {
+                console.warn('Failed to load reference template, using fallback template');
+                return this.getFallbackSOSTemplate();
+            }
+        } catch (error) {
+            console.warn('Error loading reference template:', error);
+            console.log('Using fallback SOS template');
+            return this.getFallbackSOSTemplate();
+        }
+    }
+
+    getFallbackSOSTemplate() {
+        // Fallback template in case the reference file can't be loaded
         return `<!doctype html>
 <html lang="en">
 <head>
@@ -333,7 +229,7 @@ Company standard format
 
   <article class="sheet" id="document">
     <header class="brand">
-      <img id="logo" class="logo" alt="Company Logo" src="https://drive.google.com/thumbnail?id=1cirv2ggrxg98gbkIn2XFPRZhfvMk3u4w&sz=w2000" />
+      <img id="logo" class="logo" alt="Company Logo" src="https://lh3.googleusercontent.com/d/1cirv2ggrxg98gbkIn2XFPRZhfvMk3u4w?t=123456789" />
       <div class="brand-block">
         <h1 data-field="company_name">Superb Oil Stream and Services Ltd. (SOS)</h1>
         <div class="meta">
@@ -360,12 +256,12 @@ Company standard format
       <p>Yours sincerely,</p>
       <p class="company">Superb Oil and Stream Service LTD</p>
       <!-- Signature above the title -->
-      <img id="signature_img" class="signature-img" src="https://drive.google.com/thumbnail?id=1oOhJeetOxrDtsZBLCfe6NzDaNrh_7LNF&sz=w2000" alt="Signature Sabri" />
+      <img id="signature_img" class="signature-img" src="https://drive.google.com/thumbnail?id=12KeRfpOvajA6uZ5KmAC7vcVuBzcF3iLl&t=123456789" alt="Signature Sabri" />
       <p><span data-field="signatory_title">Managing Director</span></p>
       <p><span data-field="signatory_name">Sabri Rezk</span></p>
     </div>
     <!-- Seal fixed at bottom-right -->
-    
+
 
     <footer>
       <div>
@@ -373,7 +269,7 @@ Company standard format
         <span>Ferris Building No.1 Floor 1 Triq San Luqa, G'Mangia Pieta. PTA 1020 – Malta</span>
       </div>
       <!-- QR placed in footer (right side) -->
-      <img id="qr_img" class="footer-qr" src="https://drive.google.com/thumbnail?id=1lHXE3ni-JXLEmQXk02oT3ZR6lXbn3-0Z&sz=w1000" alt="QR Code" />
+      <img id="qr_img" class="footer-qr" src="https://lh3.googleusercontent.com/d/1lHXE3ni-JXLEmQXk02oT3ZR6lXbn3-0Z?t=123456789" alt="QR Code" />
     </footer>
   </article>
 
@@ -395,7 +291,7 @@ Company standard format
     (function(){
       var DEFAULT_ASSETS = {
         logo_url: 'https://drive.google.com/file/d/1cirv2ggrxg98gbkIn2XFPRZhfvMk3u4w/view?usp=sharing',
-        signature_url: 'https://drive.google.com/file/d/1oOhJeetOxrDtsZBLCfe6NzDaNrh_7LNF/view?usp=sharing',
+        signature_url: 'https://drive.google.com/file/d/12KeRfpOvajA6uZ5KmAC7vcVuBzcF3iLl/view?usp=sharing',
         seal_url: 'https://drive.google.com/file/d/1VjTDdhUVZ5LUqViRJ0rvAPrRdk03AMpa/view?usp=sharing',
         qr_url: 'https://drive.google.com/file/d/1lHXE3ni-JXLEmQXk02oT3ZR6lXbn3-0Z/view?usp=sharing'
       };
@@ -425,21 +321,6 @@ Company standard format
         }
     }
 
-    setCustomTemplate() {
-        const template = this.customTemplateInput.value.trim();
-        if (template) {
-            this.customTemplate = template;
-            localStorage.setItem('customTemplate', template);
-            this.customTemplateInput.style.borderColor = '#4CAF50';
-            alert('Custom template set successfully! This will override built-in templates.');
-        } else {
-            // Clear custom template
-            this.customTemplate = null;
-            localStorage.removeItem('customTemplate');
-            this.customTemplateInput.style.borderColor = '#ddd';
-            alert('Custom template cleared. Using built-in templates.');
-        }
-    }
 
 
 
@@ -451,6 +332,7 @@ Company standard format
             reader.readAsArrayBuffer(file);
         });
     }
+
 
     async handleFileSelect(file) {
         if (!file || file.type !== 'application/pdf') {
@@ -499,8 +381,8 @@ Company standard format
             this.updateProgress(95, 'Reformatting to standard format...');
             
             // Format text according to company standards
-            const company = this.getSelectedCompany();
-            const formattedText = this.formatToCompanyStandard(improvedText, company);
+            const company = this.getSelectedTemplate();
+            const formattedText = await this.formatToCompanyStandard(improvedText, company);
             
             this.updateProgress(100, 'Processing completed');
             
@@ -611,20 +493,25 @@ Company standard format
         }
     }
 
-    formatToCompanyStandard(text, company) {
+    async formatToCompanyStandard(text, company) {
         const rfqNumber = this.generateRfqNumber(company);
         const currentDate = this.getCurrentDate();
         const dueDate = this.getDueDate();
         
-        // Check if custom template exists (overrides built-in templates)
-        if (this.customTemplate) {
-            return this.formatWithCustomTemplate(text, rfqNumber, currentDate, dueDate, company, this.customTemplate);
-        }
-        
         // Use built-in template - SOS uses HTML template, DLE uses text template
         if (company === 'SOS') {
+            console.log('Using SOS template...');
+            // Load SOS template if not already loaded
+            if (!this.sosTemplate) {
+                console.log('Loading SOS template...');
+                this.sosTemplate = await this.getBuiltInSOSTemplate();
+            } else {
+                console.log('Using cached SOS template');
+            }
+            console.log('SOS template length:', this.sosTemplate ? this.sosTemplate.length : 'null');
             return this.formatWithHtmlTemplate(text, rfqNumber, currentDate, dueDate, company, this.sosTemplate);
         } else {
+            console.log('Using DLE template...');
             return this.formatWithCustomTemplate(text, rfqNumber, currentDate, dueDate, company, this.dleTemplate);
         }
     }
@@ -649,6 +536,7 @@ Company standard format
         
         return formattedHtml;
     }
+
 
     formatWithCustomTemplate(text, rfqNumber, currentDate, dueDate, company, template) {
         // Extract structured data and create table
@@ -977,19 +865,57 @@ Company standard format
         const dueDate = this.getDueDate();
         
         // Create preview with structured information
-        const preview = `
-            <div class="rfq-info">
-                <h4>📋 RFQ Generated: ${rfqNumber}</h4>
-                <p><strong>Company:</strong> ${company}</p>
-                <p><strong>Creation Date:</strong> ${currentDate}</p>
-                <p><strong>Due Date:</strong> ${dueDate}</p>
-            </div>
-            <div class="text-preview">
-                ${text.replace(/\n/g, '<br>').substring(0, 2000)}${text.length > 2000 ? '...' : ''}
-            </div>
-        `;
+        let preview;
+        if (company === 'SOS') {
+            // For SOS (HTML template), show the actual HTML content
+            preview = `
+                <div class="rfq-info">
+                    <h4>📋 RFQ Generated: ${rfqNumber}</h4>
+                    <p><strong>Company:</strong> ${company}</p>
+                    <p><strong>Creation Date:</strong> ${currentDate}</p>
+                    <p><strong>Due Date:</strong> ${dueDate}</p>
+                </div>
+                <div class="text-preview" style="border: 1px solid #ddd; padding: 0; background: white; max-height: 460px; overflow-y: auto;">
+                    <div id="sosEditor" contenteditable="true" style="min-height:420px; outline: none;"></div>
+                    <div style="display:flex; gap:8px; padding:8px; border-top:1px solid #eee; background:#fafafa;">
+                        <button id="applyHtmlChanges" class="btn btn-primary">Apply changes</button>
+                        <span style="font-size:12px; color:#666;">You can edit the HTML above before downloading.</span>
+                    </div>
+                </div>
+            `;
+        } else {
+            // For DLE (text template), show text preview
+            preview = `
+                <div class="rfq-info">
+                    <h4>📋 RFQ Generated: ${rfqNumber}</h4>
+                    <p><strong>Company:</strong> ${company}</p>
+                    <p><strong>Creation Date:</strong> ${currentDate}</p>
+                    <p><strong>Due Date:</strong> ${dueDate}</p>
+                </div>
+                <div class="text-preview">
+                    ${text.replace(/\n/g, '<br>').substring(0, 2000)}${text.length > 2000 ? '...' : ''}
+                </div>
+            `;
+        }
         
         this.textPreview.innerHTML = preview;
+
+        // If SOS, load the HTML into the live editor and wire Apply button
+        if (company === 'SOS') {
+            const editor = document.getElementById('sosEditor');
+            if (editor) {
+                editor.innerText = text;
+            }
+            const applyBtn = document.getElementById('applyHtmlChanges');
+            if (applyBtn) {
+                applyBtn.addEventListener('click', () => {
+                    const edited = editor ? editor.innerText : text;
+                    // Save edited HTML as the content to be downloaded
+                    this.formattedText = edited;
+                    alert('Changes applied. Now you can download as PDF/HTML.');
+                });
+            }
+        }
     }
 
     showError(message) {
@@ -1002,7 +928,7 @@ Company standard format
     downloadResult() {
         if (!this.formattedText) return;
         
-        const company = this.selectedCompany || 'DLE';
+        const company = this.getSelectedTemplate();
         const rfqNumber = this.generateRfqNumber(company);
         
         // If using SOS (HTML template) or custom template, generate PDF and HTML
@@ -1014,7 +940,16 @@ Company standard format
         }
         
         // Always create HTML document for backup
-        const htmlContent = this.createHTMLDocument(this.formattedText, company, rfqNumber);
+        let htmlContent;
+        if (company === 'SOS') {
+            // For SOS, use the formatted template directly (already complete HTML)
+            console.log('Downloading SOS template HTML - using formatted template directly');
+            htmlContent = this.formattedText;
+        } else {
+            // For DLE, create a new HTML document wrapper
+            console.log('Downloading DLE template HTML - wrapping in HTML document');
+            htmlContent = this.createHTMLDocument(this.formattedText, company, rfqNumber);
+        }
         
         const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
         const url = URL.createObjectURL(blob);
@@ -1028,10 +963,8 @@ Company standard format
     }
 
     createHTMLDocument(content, company, rfqNumber) {
-        const branding = this.branding || {};
-        const logo = branding.logoDataUrl;
-        const headerText = branding.headerText || 'Request for Quotation';
-        const footerText = branding.footerText || `Auto-generated document - ${company} | Company standard format`;
+        const headerText = 'Request for Quotation';
+        const footerText = `Auto-generated document - ${company} | Company standard format`;
         return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1122,7 +1055,6 @@ Company standard format
 </head>
 <body>
     <div class="header">
-        ${logo ? `<img src="${logo}" alt="Logo" style="max-height:60px; float:left; margin-right:12px;">` : ''}
         <h1>${headerText}</h1>
         <p>RFQ ${rfqNumber} | Company: ${company} | Generated: ${new Date().toLocaleDateString()}</p>
         <div style="clear:both;"></div>
@@ -1229,45 +1161,208 @@ Company standard format
         }
     }
 
+    // Debug function to test PDF generation
+    async testPdfGeneration() {
+        console.log('=== PDF GENERATION TEST ===');
+
+        const testHtml = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Test</title>
+                <style>body { font-family: Arial; padding: 20px; }</style>
+            </head>
+            <body>
+                <h1>PDF Test</h1>
+                <p>This is a simple test.</p>
+            </body>
+            </html>
+        `;
+
+        try {
+            const container = document.createElement('div');
+            container.innerHTML = testHtml;
+            container.style.position = 'absolute';
+            container.style.left = '-9999px';
+            document.body.appendChild(container);
+
+            const opt = {
+                margin: 10,
+                filename: 'TEST_PDF.pdf',
+                html2canvas: { scale: 1 },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            await html2pdf().set(opt).from(container).save();
+            document.body.removeChild(container);
+
+            console.log('✅ PDF test successful!');
+            alert('PDF test passed! Basic PDF generation works.');
+        } catch (error) {
+            console.error('❌ PDF test failed:', error);
+            alert('PDF test failed. Check console for details.');
+        }
+    }
+
     async downloadHtmlAsPdf(htmlContent, company, rfqNumber) {
         try {
-            // Create a temporary container for the HTML content
-            const tempContainer = document.createElement('div');
-            tempContainer.innerHTML = htmlContent;
-            tempContainer.style.position = 'absolute';
-            tempContainer.style.left = '-9999px';
-            tempContainer.style.top = '-9999px';
-            document.body.appendChild(tempContainer);
-            
-            // Configure PDF options
+            console.log('Starting PDF generation for:', rfqNumber);
+            console.log('HTML content length:', htmlContent.length);
+            console.log('First 500 characters:', htmlContent.substring(0, 500));
+
+            // Create a simple container and inject the HTML directly
+            const container = document.createElement('div');
+            container.innerHTML = htmlContent;
+            container.style.position = 'absolute';
+            container.style.left = '-9999px';
+            container.style.top = '-9999px';
+            container.style.width = '800px'; // Fixed width for PDF
+            container.style.backgroundColor = '#ffffff';
+            document.body.appendChild(container);
+
+            console.log('Container created and added to DOM');
+
+            // Wait for images to load
+            const images = container.querySelectorAll('img');
+            console.log('Found', images.length, 'images to wait for');
+
+            if (images.length > 0) {
+                await Promise.all(Array.from(images).map(img => {
+                    return new Promise((resolve) => {
+                        if (img.complete && img.naturalHeight > 0) {
+                            console.log('Image already loaded:', img.src);
+                            resolve();
+                        } else {
+                            img.onload = () => {
+                                console.log('Image loaded:', img.src);
+                                resolve();
+                            };
+                            img.onerror = () => {
+                                console.warn('Image failed to load:', img.src);
+                                resolve(); // Don't block PDF generation
+                            };
+                            // Timeout after 5 seconds
+                            setTimeout(resolve, 5000);
+                        }
+                    });
+                }));
+                console.log('All images processed');
+            }
+
+            // Wait a bit more for layout
+            await new Promise(resolve => setTimeout(resolve, 1500));
+
+            // Find the main content element
+            const mainElement = container.querySelector('#document') || container.querySelector('article') || container;
+            console.log('Main element for PDF:', mainElement.tagName, mainElement.id);
+
+            // Configure simple PDF options
             const opt = {
-                margin: 0.5,
+                margin: 15,
                 filename: `${rfqNumber}_RFQ.pdf`,
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { 
-                    scale: 2,
-                    useCORS: true,
-                    letterRendering: true
+                image: { type: 'jpeg', quality: 0.95 },
+                html2canvas: {
+                    scale: 1,
+                    useCORS: false,
+                    allowTaint: false,
+                    backgroundColor: '#ffffff',
+                    width: 794,
+                    height: 1123
                 },
-                jsPDF: { 
-                    unit: 'in', 
-                    format: 'letter', 
-                    orientation: 'portrait' 
+                jsPDF: {
+                    unit: 'px',
+                    format: [794, 1123], // A4 dimensions
+                    orientation: 'portrait'
                 }
             };
-            
-            // Generate PDF
-            await html2pdf().set(opt).from(tempContainer).save();
-            
+
+            console.log('PDF options configured:', opt);
+            console.log('Starting PDF generation...');
+
+            await html2pdf().set(opt).from(mainElement).save();
+
+            console.log('PDF generated successfully!');
+
             // Clean up
-            document.body.removeChild(tempContainer);
-            
+            document.body.removeChild(container);
+
         } catch (error) {
-            console.error('Error generating PDF:', error);
-            alert('Error generating PDF. HTML version will be downloaded instead.');
-            // Fallback to HTML download
-            this.downloadHTMLVersion(htmlContent, company, rfqNumber);
+            console.error('PDF generation failed:', error);
+            console.error('Error details:', error.message);
+
+            // Last resort: try with minimal HTML
+            try {
+                console.log('Attempting minimal PDF fallback...');
+                const minimalContainer = document.createElement('div');
+                minimalContainer.innerHTML = `
+                    <div style="font-family: Arial, sans-serif; padding: 40px; background: white;">
+                        <h1 style="color: #333; margin-bottom: 20px;">RFQ ${rfqNumber}</h1>
+                        <p style="font-size: 14px; color: #666;">Company: ${company}</p>
+                        <p style="font-size: 14px; color: #666;">Generated: ${new Date().toLocaleString()}</p>
+                        <p style="margin-top: 30px; font-size: 12px; color: #999;">PDF generation completed</p>
+                    </div>
+                `;
+                minimalContainer.style.position = 'absolute';
+                minimalContainer.style.left = '-9999px';
+                minimalContainer.style.top = '-9999px';
+                document.body.appendChild(minimalContainer);
+
+                const minimalOpt = {
+                    margin: 20,
+                    filename: `${rfqNumber}_MINIMAL_RFQ.pdf`,
+                    html2canvas: { scale: 1 },
+                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                };
+
+                await html2pdf().set(minimalOpt).from(minimalContainer).save();
+                document.body.removeChild(minimalContainer);
+
+                console.log('Minimal PDF fallback successful');
+                alert('PDF generated with basic formatting. Full template PDF had issues.');
+
+            } catch (minimalError) {
+                console.error('Minimal PDF also failed:', minimalError);
+                alert('PDF generation failed completely. HTML version downloaded instead.');
+                this.downloadHTMLVersion(htmlContent, company, rfqNumber);
+            }
         }
+    }
+
+    // Turn a full HTML string into a renderable container for html2pdf
+    createPdfContainerFromHtml(htmlContent) {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(htmlContent, 'text/html');
+        const container = document.createElement('div');
+        container.style.width = '210mm';
+        container.style.minHeight = '297mm';
+        container.style.background = '#ffffff';
+
+        // Collect inline styles from <head>
+        const head = doc.querySelector('head');
+        if (head) {
+            const styleTags = head.querySelectorAll('style');
+            if (styleTags.length > 0) {
+                const mergedStyle = document.createElement('style');
+                let cssText = '';
+                styleTags.forEach(s => { cssText += s.textContent + '\n'; });
+                mergedStyle.textContent = cssText;
+                container.appendChild(mergedStyle);
+            }
+        }
+
+        // Insert body content
+        const body = doc.querySelector('body');
+        if (body) {
+            // Copy only the inner content of body
+            const wrapper = document.createElement('div');
+            wrapper.innerHTML = body.innerHTML;
+            container.appendChild(wrapper);
+        } else {
+            // Fallback: use the raw content
+            container.innerHTML = htmlContent;
+        }
+
+        return container;
     }
 
     downloadHTMLVersion(content, company, rfqNumber) {
